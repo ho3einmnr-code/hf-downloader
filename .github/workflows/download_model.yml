@@ -1,0 +1,42 @@
+name: Download HF Model (Artifact)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install git-lfs and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs
+          git lfs install
+          pip install huggingface_hub
+
+      - name: Download model files
+        run: |
+          mkdir model
+          python3 - << 'EOF'
+from huggingface_hub import snapshot_download
+snapshot_download(
+    repo_id="Systran/faster-whisper-large-v3",
+    local_dir="model",
+    resume_download=True
+)
+EOF
+
+      - name: Zip model folder
+        run: |
+          zip -r model.zip model
+
+      - name: Upload model.zip as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: faster-whisper-large-v3
+          path: model.zip
+          retention-days: 7
