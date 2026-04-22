@@ -20,15 +20,15 @@ jobs:
 
       - name: Download model files
         run: |
-          mkdir model
+          mkdir -p model
           python3 - << 'EOF'
-from huggingface_hub import snapshot_download
-snapshot_download(
-    repo_id="Systran/faster-whisper-large-v3",
-    local_dir="model",
-    resume_download=True
-)
-EOF
+          from huggingface_hub import snapshot_download
+          snapshot_download(
+              repo_id="Systran/faster-whisper-large-v3",
+              local_dir="model",
+              resume_download=True
+          )
+          EOF
 
       - name: Zip model folder
         run: |
