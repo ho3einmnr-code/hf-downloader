@@ -1,4 +1,4 @@
-name: Test CTranslate2 GPU Build (Py3.12 + Win + CUDA 11.8)
+name: Test CTranslate2 GPU Build
 
 on:
   workflow_dispatch:
@@ -8,27 +8,26 @@ jobs:
     runs-on: windows-2022
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install Python 3.12
-        uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install Visual Studio Build Tools
+      - name: VS Build Environment
         uses: egor-tensin/vs-shell@v2
 
-      - name: Install CMake
-        uses: jwlawson/actions-setup-cmake@v1
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
 
-      - name: Install Ninja
-        uses: seanmiddleditch/gha-setup-ninja@v3
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v4
 
-      - name: Install CUDA Toolkit 11.8
+      - name: Install CUDA Toolkit
         uses: Jimver/cuda-toolkit@v0.2.17
         with:
-          cuda: "11.8"
+          cuda: "11.8.0"
 
       - name: Install Python deps
         run: |
@@ -40,13 +39,13 @@ jobs:
           cd CTranslate2
           git submodule update --init --recursive
 
-      - name: Build CTranslate2 (GPU-enabled)
+      - name: Build Wheel
         run: |
           cd CTranslate2
           python -m pip wheel . -w dist --verbose
 
-      - name: Upload Wheel Artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ctranslate2-gpu-py312-test
+          name: ctranslate2-wheel
           path: CTranslate2/dist/*.whl
