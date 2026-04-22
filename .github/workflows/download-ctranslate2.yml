@@ -1,10 +1,10 @@
-name: Test CTranslate2 Wheels (Win + CUDA11)
+name: Find CTranslate2 Wheels
 
 on:
   workflow_dispatch:
 
 jobs:
-  fetch-wheels:
+  search:
     runs-on: ubuntu-latest
 
     steps:
@@ -12,18 +12,20 @@ jobs:
         run: sudo apt update && sudo apt install -y jq curl zip
 
       - name: Create folder
-        run: mkdir -p wheels
+        run: mkdir wheels
 
-      - name: Download release metadata
-        run: curl -s https://api.github.com/repos/OpenNMT/CTranslate2/releases/latest -o release.json
-
-      - name: Extract matching URLs
+      - name: Fetch releases
         run: |
-          jq -r '.assets[].browser_download_url' release.json > urls.txt
-          grep -i win urls.txt > filtered.txt || true
-          grep -Ei 'cp310|cp312' filtered.txt > filtered2.txt || true
-          grep -Ei 'cu11|cuda11|cu118|cuda-11' filtered2.txt > final.txt || true
-          cat final.txt
+          curl -s "https://api.github.com/repos/OpenNMT/CTranslate2/releases?per_page=20" > releases.json
+
+      - name: Extract wheel URLs
+        run: |
+          jq -r '.[].assets[].browser_download_url' releases.json > urls.txt
+          grep -i win urls.txt > win.txt || true
+          grep -Ei 'cp310|cp312' win.txt > py.txt || true
+          grep -Ei 'cu11|cuda11|cu118|cuda-11' py.txt > final.txt || true
+          echo "Matched files:"
+          cat final.txt || true
 
       - name: Download wheels
         run: |
@@ -33,24 +35,18 @@ jobs:
               curl -L "$url" -o wheels/$(basename "$url")
             done < final.txt
           else
-            echo "No matching wheels found."
+            echo "No compatible wheels found."
           fi
 
-      - name: List downloaded files
+      - name: List files
         run: ls -lah wheels || true
 
-      - name: Create zip
+      - name: Zip result
         run: |
-          cd wheels
-          if [ "$(ls -A .)" ]; then
-            zip -r ../ctranslate2_test_wheels.zip .
-          else
-            echo "Folder empty, creating empty zip"
-            zip -r ../ctranslate2_test_wheels.zip . || true
-          fi
+          zip -r wheels_result.zip wheels || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ctranslate2-test-wheels
-          path: ctranslate2_test_wheels.zip
+          name: wheels
+          path: wheels_result.zip
