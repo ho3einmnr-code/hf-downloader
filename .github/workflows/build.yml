@@ -46,7 +46,7 @@ jobs:
           python -m pip wheel . -w dist --verbose
 
       - name: Upload Wheel Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ctranslate2-gpu-py312-test
           path: CTranslate2/dist/*.whl
