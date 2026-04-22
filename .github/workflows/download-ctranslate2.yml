@@ -9,15 +9,48 @@ jobs:
 
     steps:
       - name: Install tools
+        run: sudo apt update && sudo apt install -y jq curl zip
+
+      - name: Create folder
+        run: mkdir -p wheels
+
+      - name: Download release metadata
+        run: curl -s https://api.github.com/repos/OpenNMT/CTranslate2/releases/latest -o release.json
+
+      - name: Extract matching URLs
         run: |
-          sudo apt update
-          sudo apt install -y jq curl zip
+          jq -r '.assets[].browser_download_url' release.json > urls.txt
+          grep -i win urls.txt > filtered.txt || true
+          grep -Ei 'cp310|cp312' filtered.txt > filtered2.txt || true
+          grep -Ei 'cu11|cuda11|cu118|cuda-11' filtered2.txt > final.txt || true
+          cat final.txt
 
-      - name: Create output directory
-        run: mkdir wheels
-
-      - name: Fetch latest release data
+      - name: Download wheels
         run: |
-          curl -s https://api.github.com/repos/OpenNMT/CTranslate2/releases/latest > release.json
+          if [ -s final.txt ]; then
+            while read url; do
+              echo "Downloading $url"
+              curl -L "$url" -o wheels/$(basename "$url")
+            done < final.txt
+          else
+            echo "No matching wheels found."
+          fi
 
-      - name: Download compatible wheels
+      - name: List downloaded files
+        run: ls -lah wheels || true
+
+      - name: Create zip
+        run: |
+          cd wheels
+          if [ "$(ls -A .)" ]; then
+            zip -r ../ctranslate2_test_wheels.zip .
+          else
+            echo "Folder empty, creating empty zip"
+            zip -r ../ctranslate2_test_wheels.zip . || true
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctranslate2-test-wheels
+          path: ctranslate2_test_wheels.zip
