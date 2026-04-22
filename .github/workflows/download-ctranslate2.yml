@@ -1,4 +1,4 @@
-name: Download CTranslate2 Wheels for Win + Py3.12 + CUDA11.8
+name: Test CTranslate2 Wheels (Win + CUDA11)
 
 on:
   workflow_dispatch:
@@ -20,24 +20,4 @@ jobs:
         run: |
           curl -s https://api.github.com/repos/OpenNMT/CTranslate2/releases/latest > release.json
 
-      - name: Filter compatible wheels and download
-        run: |
-          cat release.json | jq -r '.assets[].browser_download_url' \
-          | grep -i "win" \
-          | grep -i "cp312" \
-          | grep -Ei "cu11|cuda11|cuda-11|cuda11\.8|cu118" \
-          | while read url; do
-              echo "Downloading: $url"
-              curl -L "$url" -o wheels/$(basename "$url")
-            done
-
-      - name: Zip all wheels
-        run: |
-          cd wheels
-          zip -r ../ctranslate2_win_cuda11_py312.zip .
-
-      - name: Upload Wheels Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ctranslate2-win-py312-cuda11
-          path: ctranslate2_win_cuda11_py312.zip
+      - name: Download compatible wheels
