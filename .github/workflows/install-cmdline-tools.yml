@@ -1,0 +1,35 @@
+name: Install Android cmdline-tools
+
+on:
+  workflow_dispatch:  # manual trigger
+
+jobs:
+  download-cmdline-tools:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download Android command line tools
+        run: |
+          mkdir -p C:\Android\cmdline-tools\latest
+          curl -L https://dl.google.com/android/repository/commandlinetools-win-11076708_latest.zip -o C:\Android\cmdline-tools.zip
+
+      - name: Unzip tools
+        run: |
+          powershell -Command "Expand-Archive -Path C:\Android\cmdline-tools.zip -DestinationPath C:\Android\cmdline-tools\latest"
+
+      - name: List folder content
+        run: |
+          dir C:\Android\cmdline-tools\latest
+
+      - name: Zip the result
+        run: |
+          powershell -Command "Compress-Archive -Path 'C:\Android\cmdline-tools\latest\*' -DestinationPath 'C:\Android\cmdline-tools-ready.zip'"
+
+      - name: Upload zipped tools artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cmdline-tools-ready
+          path: C:\Android\cmdline-tools-ready.zip
