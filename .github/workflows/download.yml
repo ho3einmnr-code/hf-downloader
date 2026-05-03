@@ -1,0 +1,27 @@
+name: Download Karing Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download file
+        run: |
+          wget -O karing.zip \
+          https://github.com/KaringX/karing/releases/download/v1.2.18.2102/karing_1.2.18.2102_windows_x64.zip
+
+      - name: Extract
+        run: |
+          unzip karing.zip -d karing
+
+      - name: List files
+        run: |
+          ls -la karing
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: karing
+          path: karing.zip
